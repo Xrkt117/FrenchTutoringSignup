@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>French Tutoring · Sign Up</title>
+<style>
+  :root {
+    --ink: #4a2236; --muted: #8a5a70; --line: #f6d6e1; --pink: #c94f7c; --pink-dark: #b23f6a;
+    --soft: #ffe6ef; --bg: #fff5f8;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 16px/1.5 system-ui, -apple-system, sans-serif; color: var(--ink); background: var(--bg); -webkit-font-smoothing: antialiased; }
+
+  .flag { display: flex; height: 6px; }
+  .flag i { flex: 1; }
+  .flag i:nth-child(1) { background: #0055a4; }
+  .flag i:nth-child(2) { background: #fff; }
+  .flag i:nth-child(3) { background: #ef4135; }
+
+  main { max-width: 760px; margin: 0 auto; padding: 0 20px 80px; }
+  header { text-align: center; padding: 56px 0 16px; }
+  h1 { font-size: 36px; letter-spacing: -.02em; margin: 0 0 8px; }
+  .sub { color: var(--muted); margin: 0; }
+  header .sub { max-width: 44ch; margin: 0 auto; }
+  h2 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 36px 0 12px; }
+
+  .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .slot {
+    text-align: left; padding: 14px 16px; border: 0; border-radius: 14px; background: #fff; font: inherit; color: inherit; cursor: pointer;
+    box-shadow: 0 0 0 1px var(--line), 0 1px 2px #4a22360a;
+  }
+  .slot:hover:not(:disabled) { box-shadow: 0 0 0 1px #f0b6ca, 0 12px 24px #c94f7c22; }
+  .slot:focus-visible { outline: 2px solid var(--pink); outline-offset: 2px; }
+  .slot:disabled { cursor: default; opacity: .5; background: transparent; }
+  .slot b { display: block; font-size: 17px; font-weight: 600; }
+  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 4px; font-size: 13px; color: var(--muted); }
+  .tag { font-size: 11px; font-weight: 600; color: var(--pink); background: var(--soft); border-radius: 999px; padding: 1px 8px; }
+
+  .card { background: #fff; border-radius: 14px; box-shadow: 0 0 0 1px var(--line); }
+  .mine { padding: 4px 16px; }
+  .mine div { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; }
+  .mine div + div { border-top: 1px solid var(--line); }
+  button.link { background: none; border: 0; color: var(--pink); font: inherit; cursor: pointer; padding: 0; }
+  button.link:hover:not(:disabled) { text-decoration: underline; }
+  button.link:disabled { color: var(--muted); cursor: default; }
+
+  dialog { border: 0; border-radius: 18px; padding: 28px; width: min(420px, 92vw); color: inherit; box-shadow: 0 24px 64px #4a223633; }
+  dialog::backdrop { background: #4a223655; }
+  dialog h3 { font-size: 22px; margin: 0 0 4px; }
+  label { display: block; font-size: 14px; font-weight: 600; margin-top: 16px; }
+  input { display: block; width: 100%; margin-top: 6px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 10px; font: inherit; color: inherit; }
+  input:focus { outline: none; border-color: var(--pink); box-shadow: 0 0 0 4px #c94f7c22; }
+  .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; }
+  .btn { padding: 10px 18px; border-radius: 10px; border: 0; background: var(--soft); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; }
+  .btn.primary { background: var(--pink); color: #fff; }
+  .btn.primary:hover { background: var(--pink-dark); }
+  .btn:disabled { opacity: .6; cursor: default; }
+  .err { color: var(--pink-dark); font-size: 14px; min-height: 1.5em; margin: 10px 0 0; }
+  .cancel-url { word-break: break-all; font-size: 14px; background: var(--soft); padding: 10px 12px; border-radius: 10px; }
+
+</style>
+</head>
+<body>
+<div class="flag" aria-hidden="true"><i></i><i></i><i></i></div>
+<main>
+  <header>
+    <h1>French Tutoring</h1>
+    <p class="sub">Pick a one-hour session. Each session has room for up to 3 students.
+      Sign-ups and cancellations close 24 hours before the session starts.</p>
+  </header>
+
+  <section id="mine-wrap" hidden>
+    <h2>Your sign-ups (on this device)</h2>
+    <div class="mine card" id="mine"></div>
+  </section>
+
+  <div id="days"><p class="sub">Loading sessions…</p></div>
+
+
+</main>
+
+<dialog id="form-dlg">
+  <form id="form">
+    <h3>Sign up</h3>
+    <p class="sub" id="form-slot"></p>
+    <label>Your name <input name="name" required maxlength="80" autocomplete="name"></label>
+    <label>Student name <input name="student" required maxlength="80"></label>
+    <label>Parent phone number <input name="phone" type="tel" required pattern="[0-9+()\-.\s]{7,20}" autocomplete="tel"></label>
+    <p class="err" id="form-err" role="alert"></p>
+    <div class="row">
+      <button type="button" class="btn" onclick="this.closest('dialog').close()">Cancel</button>
+      <button class="btn primary">Sign up</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="done-dlg">
+  <h3>You're signed up!</h3>
+  <p id="done-slot"></p>
+  <p>Need to cancel? Use this link (up to 24 hours before). It's also saved on this device.</p>
+  <p class="cancel-url" id="done-url"></p>
+  <div class="row"><button class="btn primary" onclick="this.closest('dialog').close()">Done</button></div>
+</dialog>
+
+<script>
+// Your Apps Script web app URL (Deploy → Manage deployments → Web app → URL).
+const API = 'PASTE_WEB_APP_URL_HERE';
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
+const mine = () => JSON.parse(localStorage.getItem('bookings') || '[]');
+const setMine = list => localStorage.setItem('bookings', JSON.stringify(list));
+const pageUrl = location.href.split(/[?#]/)[0];
+let slots = [], picked = null;
+
+// No content-type header on purpose: a plain-text POST is what Apps Script accepts from another site.
+async function api(body) {
+  const r = await fetch(API, body ? { method: 'POST', body: JSON.stringify(body) } : {});
+  const j = await r.json();
+  if (j.error) throw new Error(j.error);
+  return j;
+}
+
+async function load() {
+  slots = await api();
+  const byDay = Map.groupBy(slots, s => s.day);
+  $('#days').innerHTML = byDay.size ? [...byDay].map(([day, list]) => `
+    <section class="day"><h2>${esc(day)}</h2>
+    <div class="slots">${list.map(s => {
+      const left = s.cap - s.taken;
+      const note = s.closed ? 'Closed' : !left ? 'Full' : left === 1 ? '1 spot left' : `${left} spots left`;
+      return `<button class="slot" data-id="${esc(s.id)}" ${s.closed || !left ? 'disabled' : ''}>
+        <b>${esc(s.time)}</b>
+        <span class="meta">${s.online ? '<span class="tag">Online</span>' : ''}
+          ${s.tutor ? `<span>${esc(s.tutor)}</span><span>·</span>` : ''}<span>${note}</span></span></button>`;
+    }).join('')}</div></section>`).join('') : '<p class="sub">No sessions are open right now.</p>';
+
+  // Forget local sign-ups whose session has passed.
+  const ids = new Set(slots.map(s => s.id));
+  setMine(mine().filter(b => ids.has(b.slot)));
+  $('#mine-wrap').hidden = !mine().length;
+  $('#mine').innerHTML = mine().map(b => {
+    const closed = slots.find(s => s.id === b.slot)?.closed;
+    return `<div><span>${esc(b.label)} · ${esc(b.student)}</span>
+      <button class="link" data-token="${esc(b.token)}" ${closed ? 'disabled title="Cancellations close 24 hours before"' : ''}>
+        ${closed ? 'Can’t cancel' : 'Cancel'}</button></div>`;
+  }).join('');
+}
+
+const refresh = () => load().catch(() => {
+  $('#days').innerHTML = '<p class="sub">Couldn’t load sessions. Please refresh the page.</p>';
+});
+
+async function cancelBooking(token) {
+  if (!confirm('Cancel this sign-up?')) return;
+  try {
+    await api({ action: 'cancel', token });
+    alert('Your sign-up was cancelled.');
+    setMine(mine().filter(b => b.token !== token));
+  } catch (e) {
+    alert(e.message);
+    if (e.message.startsWith('Sign-up not found')) setMine(mine().filter(b => b.token !== token));
+  }
+  refresh();
+}
+
+$('#days').onclick = e => {
+  const btn = e.target.closest('.slot');
+  if (!btn) return;
+  picked = slots.find(s => s.id === btn.dataset.id);
+  $('#form-slot').textContent = `${picked.day}, ${picked.time}${picked.online ? ' · Online session' : ''}`;
+  $('#form-err').textContent = '';
+  $('#form-dlg').showModal();
+};
+
+$('#mine').onclick = e => { const t = e.target.dataset.token; if (t) cancelBooking(t); };
+
+$('#form').onsubmit = async e => {
+  e.preventDefault();
+  const form = e.target, button = form.querySelector('.primary');
+  const data = Object.fromEntries(new FormData(form));
+  button.disabled = true; // the Sheet takes a second or two; stop double sign-ups
+  try {
+    const { token, label } = await api({ action: 'book', slot: picked.id, ...data });
+    setMine([...mine(), { token, slot: picked.id, label, student: data.student }]);
+    form.reset();
+    $('#form-dlg').close();
+    $('#done-slot').textContent = `${label} · ${data.student}${picked.online ? ' · Online session' : ''}`;
+    $('#done-url').textContent = `${pageUrl}?cancel=${token}`;
+    $('#done-dlg').showModal();
+  } catch (err) {
+    $('#form-err').textContent = err.message;
+  }
+  button.disabled = false;
+  refresh();
+};
+
+const cancelToken = new URLSearchParams(location.search).get('cancel');
+history.replaceState(null, '', pageUrl);
+load().then(() => cancelToken && cancelBooking(cancelToken), () => refresh());
+</script>
+</body>
+</html>
