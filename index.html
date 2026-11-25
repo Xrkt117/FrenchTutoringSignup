@@ -7,19 +7,19 @@
 <style>
   :root {
     --ink: #4a2236; --muted: #8a5a70; --line: #f6d6e1; --pink: #c94f7c; --pink-dark: #b23f6a;
-    --soft: #ffe6ef; --bg: #fff5f8;
+    --soft: #ffe6ef; --bg: #fff5f8; --ease: cubic-bezier(.2, .8, .2, 1);
   }
   * { box-sizing: border-box; }
   body { margin: 0; font: 16px/1.5 system-ui, -apple-system, sans-serif; color: var(--ink); background: var(--bg); -webkit-font-smoothing: antialiased; }
 
   .flag { display: flex; height: 6px; }
-  .flag i { flex: 1; }
+  .flag i { flex: 1; transform-origin: left; animation: grow .7s var(--ease) both; }
   .flag i:nth-child(1) { background: #0055a4; }
-  .flag i:nth-child(2) { background: #fff; }
-  .flag i:nth-child(3) { background: #ef4135; }
+  .flag i:nth-child(2) { background: #fff; animation-delay: .1s; }
+  .flag i:nth-child(3) { background: #ef4135; animation-delay: .2s; }
 
   main { max-width: 760px; margin: 0 auto; padding: 0 20px 80px; }
-  header { text-align: center; padding: 56px 0 16px; }
+  header { text-align: center; padding: 56px 0 16px; animation: rise .6s var(--ease) both; }
   h1 { font-size: 36px; letter-spacing: -.02em; margin: 0 0 8px; }
   .sub { color: var(--muted); margin: 0; }
   header .sub { max-width: 44ch; margin: 0 auto; }
@@ -29,8 +29,10 @@
   .slot {
     text-align: left; padding: 14px 16px; border: 0; border-radius: 14px; background: #fff; font: inherit; color: inherit; cursor: pointer;
     box-shadow: 0 0 0 1px var(--line), 0 1px 2px #4a22360a;
+    transition: transform .2s var(--ease), box-shadow .2s var(--ease);
   }
-  .slot:hover:not(:disabled) { box-shadow: 0 0 0 1px #f0b6ca, 0 12px 24px #c94f7c22; }
+  .slot:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 0 0 1px #f0b6ca, 0 12px 24px #c94f7c22; }
+  .slot:active:not(:disabled) { transform: translateY(-1px) scale(.98); }
   .slot:focus-visible { outline: 2px solid var(--pink); outline-offset: 2px; }
   .slot:disabled { cursor: default; opacity: .5; background: transparent; }
   .slot b { display: block; font-size: 17px; font-weight: 600; }
@@ -46,19 +48,29 @@
   button.link:disabled { color: var(--muted); cursor: default; }
 
   dialog { border: 0; border-radius: 18px; padding: 28px; width: min(420px, 92vw); color: inherit; box-shadow: 0 24px 64px #4a223633; }
+  dialog[open] { animation: pop .25s var(--ease); }
   dialog::backdrop { background: #4a223655; }
+  dialog[open]::backdrop { animation: fade .25s ease; }
   dialog h3 { font-size: 22px; margin: 0 0 4px; }
   label { display: block; font-size: 14px; font-weight: 600; margin-top: 16px; }
-  input { display: block; width: 100%; margin-top: 6px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 10px; font: inherit; color: inherit; }
+  input { display: block; width: 100%; margin-top: 6px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 10px; font: inherit; color: inherit; transition: border-color .15s, box-shadow .15s; }
   input:focus { outline: none; border-color: var(--pink); box-shadow: 0 0 0 4px #c94f7c22; }
   .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; }
-  .btn { padding: 10px 18px; border-radius: 10px; border: 0; background: var(--soft); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; }
+  .btn { padding: 10px 18px; border-radius: 10px; border: 0; background: var(--soft); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; transition: background .15s, transform .1s; }
+  .btn:active { transform: scale(.97); }
   .btn.primary { background: var(--pink); color: #fff; }
   .btn.primary:hover { background: var(--pink-dark); }
   .btn:disabled { opacity: .6; cursor: default; }
   .err { color: var(--pink-dark); font-size: 14px; min-height: 1.5em; margin: 10px 0 0; }
   .cancel-url { word-break: break-all; font-size: 14px; background: var(--soft); padding: 10px 12px; border-radius: 10px; }
 
+
+  .intro .day { animation: rise .5s var(--ease) both; animation-delay: calc(var(--i) * 60ms + .15s); }
+  @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+  @keyframes grow { from { transform: scaleX(0); } }
+  @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.96); } }
+  @keyframes fade { from { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { *, *::backdrop { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
@@ -125,8 +137,8 @@ async function api(body) {
 async function load() {
   slots = await api();
   const byDay = Map.groupBy(slots, s => s.day);
-  $('#days').innerHTML = byDay.size ? [...byDay].map(([day, list]) => `
-    <section class="day"><h2>${esc(day)}</h2>
+  $('#days').innerHTML = byDay.size ? [...byDay].map(([day, list], i) => `
+    <section class="day" style="--i:${i}"><h2>${esc(day)}</h2>
     <div class="slots">${list.map(s => {
       const left = s.cap - s.taken;
       const note = s.closed ? 'Closed' : !left ? 'Full' : left === 1 ? '1 spot left' : `${left} spots left`;
@@ -135,6 +147,8 @@ async function load() {
         <span class="meta">${s.online ? '<span class="tag">Online</span>' : ''}
           ${s.tutor ? `<span>${esc(s.tutor)}</span><span>·</span>` : ''}<span>${note}</span></span></button>`;
     }).join('')}</div></section>`).join('') : '<p class="sub">No sessions are open right now.</p>';
+  // Entrance animation only on first load, not on every refresh after a sign-up.
+  if (!load.done) { load.done = true; $('#days').classList.add('intro'); setTimeout(() => $('#days').classList.remove('intro'), 2500); }
 
   // Forget local sign-ups whose session has passed.
   const ids = new Set(slots.map(s => s.id));
